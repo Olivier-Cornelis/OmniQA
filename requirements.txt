@@ -1,0 +1,5 @@
+faiss-cpu==1.7.3
+fire==0.5.0
+prompt-toolkit==3.0.38
+tqdm==4.65.0
+llama_index==0.4.23
