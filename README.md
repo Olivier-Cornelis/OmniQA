@@ -38,6 +38,7 @@ Feed virtually any type of document to a large language model and get an index i
 
 ### Similar projects
 * [paper-qa](https://github.com/whitead/paper-qa/)
+* [dr-doc-search](https://github.com/namuan/dr-doc-search)
 
 ### Credits to awesome libs
 * [LLama_Index (formerly GPT_index)](https://github.com/jerryjliu/gpt_index) is used for most of the heavy lifting
