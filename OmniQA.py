@@ -56,6 +56,7 @@ class OmniQA:
             prompt_name="french_qa",
             prompt_model_name="gpt-3.5-turbo",
             yes=False,
+            debug=False,
             ):
         """
         Parameters
@@ -120,6 +121,10 @@ class OmniQA:
             If True, will skip instead of asking for confirmation for some
             steps. Will not skip the confirmation to ask for something too
             expansive.
+
+        debug: bool, default: False
+            if True, instead of catching most exceptions, they will be
+            raised. Useful when debugging with pdb
         """
         # checking arguments validity
         # path handling
@@ -134,6 +139,7 @@ class OmniQA:
         pl("")
 
         self.import_type = import_type
+        self.debug = debug
 
         # which prompt to use
         self.prompt_name = prompt_name
@@ -470,6 +476,9 @@ class OmniQA:
             except Exception as err:
                 pl(f"Exception '{err}' when adding '{self.new_docs[i]} to "
                    f"'{self.index_path}'. Waiting 60s then retrying")
+                if self.debug:
+                    pl("Waiting.")
+                    raise
                 time.sleep(60)
 
                 pl("Retrying.")
@@ -480,6 +489,9 @@ class OmniQA:
                        f"'{self.new_docs[i]} to "
                        f"'{self.index_path}'. "
                        "Waiting 5 minutes then retrying.")
+                    if self.debug:
+                        pl("Waiting.")
+                        raise
                     time.sleep(60*5)
 
                     pl("Retrying.")
@@ -489,6 +501,9 @@ class OmniQA:
                         pl(f"Exception 3rd time '{err}' when adding "
                            f"'{self.new_docs[i]} to "
                            f"'{self.index_path}'. Skipping this document.")
+                        if self.debug:
+                            raise
+                            pl("Waiting.")
                     continue
 
             self.index.save_to_disk(
@@ -552,12 +567,15 @@ class OmniQA:
                     pl(f"Changed top_k from '{prev}' to '{self.top_k}'")
                 except Exception as err:
                     pl(f"Error when changing top_k: '{err}'")
+                    if self.debug:
+                        raise
                     return self.prompt_user(q)
 
             if "/debug" in ans:
                 pl("Entering debug mode.")
                 breakpoint()
-                raise Exception("Restarting prompt.")
+                pl("Restarting prompt.")
+                return self.prompt_user(q)
 
             if "/model=" in ans:
                 new_model = re.search(r"/model=(\w+)", ans).group(1)
