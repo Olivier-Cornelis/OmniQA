@@ -56,7 +56,6 @@ class OmniQA:
             prompt_name="french_qa",
             prompt_model_name="gpt-3.5-turbo",
             yes=False,
-            rot13_api_key=False,
             ):
         """
         Parameters
@@ -121,10 +120,6 @@ class OmniQA:
             If True, will skip instead of asking for confirmation for some
             steps. Will not skip the confirmation to ask for something too
             expansive.
-
-        rot13_api_key: bool, default: False
-            if True will apply a rot13 to your API key after loading it.
-            This it to avoid storing it as plain text.
         """
         # checking arguments validity
         # path handling
@@ -213,17 +208,9 @@ class OmniQA:
             new_docs = [new_docs]
         self.new_docs = new_docs
 
-        # loading api from text with a rot13 to avoid storing the key directly
         pl("Loading API key.")
         credential_file = "./API_KEY.txt"
-        if rot13_api_key:
-            rot13 = str.maketrans(
-                'ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz',
-                'NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm')
-            self.openai_api_key = str(
-                    Path(credential_file).read_text()).strip().translate(rot13)
-        else:
-            self.openai_api_key = str(Path(credential_file).read_text())
+        self.openai_api_key = str(Path(credential_file).read_text())
         os.environ["OPENAI_API_KEY"] = self.openai_api_key
 
         # used to display the price of each query
