@@ -85,7 +85,7 @@ class OmniQA:
         import_type: str, default 'onefile'
             String to specify how "new_docs" should be interpreted.
             * If 'onefile': the parser will determine the type of the file
-              supported by default.
+              supported by default. Globs can still be used if they point to individual files.
             * If 'listfile': new_docs is considered a path to a document containing
               one path per line. Globing is supported with relative paths.
               Lines begining with # are ignored.
