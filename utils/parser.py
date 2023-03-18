@@ -16,11 +16,13 @@ class ParserClass:
                 return self.handle_pdf(path, extra_docid)
             elif str(path).lower().endswith(".md"):
                 return self.handle_markdown(path, extra_docid)
+            elif str(path).lower().endswith(".txt"):
+                return self.handle_markdown(path, extra_docid)
             else:
                 self.pl("File with extension other than pdf or md "
                         f"found: '{path}'")
                 self.pl("Trying to parse it.")
-                return self.handle_generic(path, extra_docid, import_type)
+                return self.handle_generic(path=path, docid=extra_docid, import_type=import_type)
         except Exception as err:
             self.pl(f"Exception when adding '{path}': '{err}'. Skipping this file.")
             return None
@@ -44,14 +46,14 @@ class ParserClass:
         self.pl(f"    * Loaded as pdf '{path}'\n")
         return new_doc
 
-    def handle_markdown(self, path):
+    def handle_markdown(self, path, extra_docid):
         docid = path.split("/")[-1] + f"_{int(time.time())}"
-        if self.extra_docid:
+        if extra_docid:
             docid = f"{extra_docid}_{docid}"
         new_doc = Document(Path(path).read_text(), doc_id=docid)
         return new_doc
 
-    def handle_generic(self, path):
+    def handle_generic(self, path, docid, import_type):
         # alternative without llama hub:
         new_doc = SimpleDirectoryReader(input_files=[path],
                                         doc_id=[docid]).load_data()

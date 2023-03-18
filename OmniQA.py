@@ -76,7 +76,8 @@ class OmniQA:
             Globs are supported for relatives paths (ex: ../*.pdf).
             Documents currently supported are :
                 pdf files (.pdf)
-                markdown files (.md).
+                markdown files (.md)
+                text files (.txt)
             Many more format can be added easily thanks to llama_index and
             llama_hub.
             Custom format can be added in the folder 'utils/parserClass'.
