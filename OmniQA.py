@@ -216,7 +216,7 @@ class OmniQA:
 
         pl("Loading API key.")
         credential_file = "./API_KEY.txt"
-        self.openai_api_key = str(Path(credential_file).read_text())
+        self.openai_api_key = str(Path(credential_file).read_text()).strip()
         os.environ["OPENAI_API_KEY"] = self.openai_api_key
 
         # used to display the price of each query
