@@ -15,9 +15,9 @@ class ParserClass:
             if str(path).lower().endswith(".pdf"):
                 return self.handle_pdf(path, extra_docid)
             elif str(path).lower().endswith(".md"):
-                return self.handle_markdown(path, extra_docid)
+                return self.handle_md_and_txt(path, extra_docid)
             elif str(path).lower().endswith(".txt"):
-                return self.handle_markdown(path, extra_docid)
+                return self.handle_md_and_txt(path, extra_docid)
             else:
                 self.pl("File with extension other than pdf or md "
                         f"found: '{path}'")
@@ -46,7 +46,7 @@ class ParserClass:
         self.pl(f"    * Loaded as pdf '{path}'\n")
         return new_doc
 
-    def handle_markdown(self, path, extra_docid):
+    def handle_md_and_txt(self, path, extra_docid):
         docid = path.split("/")[-1] + f"_{int(time.time())}"
         if extra_docid:
             docid = f"{extra_docid}_{docid}"
