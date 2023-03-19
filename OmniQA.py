@@ -164,7 +164,7 @@ class OmniQA:
         if extra_docid is not None:
             assert new_docs is not None, (
                 "Must specify files to add if extra_docid is set")
-            self.extra_docid = extra_docid
+        self.extra_docid = extra_docid
 
         if create_index:
             assert new_docs is not None, (
