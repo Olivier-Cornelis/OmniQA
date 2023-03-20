@@ -53,6 +53,7 @@ class OmniQA:
             create_index=False,
             top_k=3,
             extra_docid=None,
+            add_docs_together=False,
             prompt_name="french_qa",
             prompt_model_name="gpt-3.5-turbo",
             yes=False,
@@ -105,6 +106,12 @@ class OmniQA:
             on the source documents used by the prompt model when it answers.
             It also appears in the source of each answer.
 
+        add_docs_together: bool, default False
+            if True: will add the documents to the index at the same time.
+                This is useful if you want to add multiple small files to an
+                index and want to compute the embeddings at the same time.
+            if False: will add each document one by one.
+
         prompt_name: str, default: "french_qa"
             The name of the prompt that is loaded as attribute of PromptClass
             in the file 'utils/prompts.py'. This allows to add your
@@ -140,6 +147,7 @@ class OmniQA:
 
         self.import_type = import_type
         self.debug = debug
+        self.add_docs_together = add_docs_together
 
         # which prompt to use
         self.prompt_name = prompt_name
@@ -450,17 +458,29 @@ class OmniQA:
                 raise SystemExit()
 
         if create_index:
-            pl("Creating index.")
+            if self.add_docs_together:
+                pl("Creating index with all documents directly.")
+                buff = self.new_documents
+            else:
+                pl("Creating empty index.")
+                buff = []
 
             faiss_d = 1536
             faiss_index = faiss.IndexFlatL2(faiss_d)
             # not yet working:
             # faiss_index = faiss.IndexIDMap(faiss.IndexFlatL2(faiss_d))
             self.index = GPTFaissIndex(
-                    [],
+                    buff,
                     faiss_index=faiss_index,
                     embed_model=self.openai_embedder,
                     )
+            if self.add_docs_together:
+                pl(f"Saved index to '{self.index_path}'")
+                self.index.save_to_disk(
+                        self.index_path,
+                        faiss_index_save_path=str(self.index_path) + ".faiss",
+                        )
+                return
 
         assert hasattr(self, "index"), "Index has not yet been loaded!"
 
