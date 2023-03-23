@@ -59,6 +59,7 @@ class OmniQA:
             prompt_model_name="gpt-3.5-turbo",
             yes=False,
             debug=False,
+            verbose=True
             ):
         """
         Parameters
@@ -133,6 +134,9 @@ class OmniQA:
         debug: bool, default: False
             if True, instead of catching most exceptions, they will be
             raised. Useful when debugging with pdb
+
+        verbose: bool, default: True
+            if True, pass verbose=True to every LLM call
         """
         # checking arguments validity
         # path handling
@@ -149,6 +153,7 @@ class OmniQA:
         self.import_type = import_type
         self.debug = debug
         self.add_docs_together = add_docs_together
+        self.verbose = verbose
 
         # which prompt to use
         self.prompt_name = prompt_name
@@ -441,11 +446,13 @@ class OmniQA:
                 else:
                     compute_summary = True
                 if compute_summary:
+                    # compute pricing
                     new_index.query(
                             self.summary_prompt,
                             response_mode="tree_summarize",
                             llm_predictor=self.mock_llm_predictor,
                             embed_model=self.mock_embed_model,
+                            verbose=self.verbose,
                             )
                     price_tkn = self.mock_llm_predictor.last_token_usage
                     price_dol = f"{price_tkn / 1000 * self.model_price:.2f}"
@@ -462,6 +469,7 @@ class OmniQA:
                             response_mode="tree_summarize",
                             llm_predictor=summary_llm,
                             embed_model=self.openai_embedder,
+                            verbose=self.verbose,
                             )
                     pl(str(summary))
                     self.index_metadata[index_hash] = {"summary": str(summary)}
@@ -804,6 +812,7 @@ class OmniQA:
                             #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.5),
                             required_keywords=self.keywords_req,
                             exclude_keywords=self.keywords_excl,
+                            verbose=self.verbose,
                             )
                     price_tkn += self.mock_llm_predictor.last_token_usage
             else:  # for regular faiss index
@@ -820,6 +829,7 @@ class OmniQA:
                         #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.1),
                         required_keywords=self.keywords_req,
                         exclude_keywords=self.keywords_excl,
+                        verbose=self.verbose,
                         )
                 price_tkn = self.mock_llm_predictor.last_token_usage
 
@@ -859,6 +869,7 @@ class OmniQA:
                         #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.5),
                         required_keywords=self.keywords_req,
                         exclude_keywords=self.keywords_excl,
+                        verbose=self.verbose,
                         )
             else:
                 response = self.index.query(
@@ -877,6 +888,7 @@ class OmniQA:
                         #                  summarize, simple, rake, recursive
                         required_keywords=self.keywords_req,
                         exclude_keywords=self.keywords_excl,
+                        verbose=self.verbose,
                         )
             pl(response)
             pl(f"\n##### Sources:\n{response.get_formatted_sources()}\n#####\n\n")
