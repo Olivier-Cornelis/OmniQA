@@ -389,7 +389,8 @@ class OmniQA:
                     )
             pl(f"\nLoaded index '{self.index_path}' from file.")
 
-            self.query_mode = "embedding"
+            self.query_mode = "embedding"  # default, embedding
+            self.response_mode = "tree_summarize"  # default, compact, tree_summarize
             # self.query_configs = [{
             #         "index_struct_type": "dict",
             #         "query_mode": "default",
@@ -799,7 +800,7 @@ class OmniQA:
                             llm_predictor=self.mock_llm_predictor,
                             embed_model=self.mock_embed_model,
                             similarity_top_k=self.top_k,
-                            #response_mode="compact",
+                            response_mode=self.response_mode,
                             #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.5),
                             required_keywords=self.keywords_req,
                             exclude_keywords=self.keywords_excl,
@@ -815,7 +816,7 @@ class OmniQA:
                         embed_model=self.mock_embed_model,
                         similarity_top_k=self.top_k,
                         mode=self.query_mode,
-                        #response_mode="compact",
+                        response_mode=self.response_mode,
                         #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.1),
                         required_keywords=self.keywords_req,
                         exclude_keywords=self.keywords_excl,
@@ -854,7 +855,7 @@ class OmniQA:
                             self.prompt_model_name]["refine"],
                         query_configs=self.query_configs,
                         similarity_top_k=self.top_k,
-                        #response_mode="compact",
+                        response_mode=self.response_mode,
                         #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.5),
                         required_keywords=self.keywords_req,
                         exclude_keywords=self.keywords_excl,
@@ -870,7 +871,7 @@ class OmniQA:
                         similarity_top_k=self.top_k,
                         #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.1),
                         mode=self.query_mode,
-                        #response_mode="compact",
+                        response_mode=self.response_mode,
                         # query_configs = self.query_configs,
                         # available mode? : default, retrieve, embedding,
                         #                  summarize, simple, rake, recursive
