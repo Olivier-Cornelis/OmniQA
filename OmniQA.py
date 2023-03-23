@@ -637,7 +637,13 @@ class OmniQA:
             /debug to open a console.
             /multiline to write your question over multiple lines.
         """
-        prompt_commands = ["/multiline", "/debug", "/top_k="]
+        prompt_commands = [
+                "/multiline",
+                "/debug",
+                "/top_k=",
+                "/required_keywords='",
+                "/exclude_keywords='"
+                ]
         prompt_commands.extend([f"/model={short}" for short in self.shortnames])
         autocomplete = WordCompleter(
                 prompt_commands + [
@@ -669,9 +675,31 @@ class OmniQA:
                     ans = ans.replace(f"/{pc}", f"{pc}")
 
             # retry if user entered multiple commands
-            if len([pc for pc in prompt_commands if pc in ans]) not in [0, 1]:
-                pl("You can use at most 1 prompt command in a given query")
+            if len([pc
+                    for pc in prompt_commands
+                    if (pc in ans and 'keywords' not in pc)]) not in [0, 1]:
+                pl("You can use at most 1 prompt command in a given query ("
+                   "excluding keywords).")
                 return self.prompt_user(q)
+
+            # extract required or excluded keywords
+            self.keywords_req = []
+            if "/required_keywords='" in ans:
+                new_kw = re.findall("/required_keywords='(.*?)'", ans)
+                ans = re.sub("/required_keywords='(.*?)'", "", ans)
+                if len(new_kw) > 1:
+                    new_kw = [" ".join(new_kw)]
+                self.keywords_req.extend(new_kw[0].split(" "))
+                pl(f"Required keywords: '{self.keywords_req}'")
+
+            self.keywords_excl = []
+            if "/exlclude_keywords" in ans:
+                new_kw = re.findall("/exclude_keywords='(.*?)'", ans)
+                ans = re.sub("/exclude_keywords='(.*?)'", "", ans)
+                if len(new_kw) > 1:
+                    new_kw = [" ".join(new_kw)]
+                self.keywords_excl.extend(new_kw[0].split(" "))
+                pl(f"Excluded keywords: '{self.keywords_excl}'")
 
             # parse prompt commands
             if "/top_k=" in ans:
@@ -773,6 +801,8 @@ class OmniQA:
                             similarity_top_k=self.top_k,
                             #response_mode="compact",
                             #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.5),
+                            required_keywords=self.keywords_req,
+                            exclude_keywords=self.keywords_excl,
                             )
                     price_tkn += self.mock_llm_predictor.last_token_usage
             else:  # for regular faiss index
@@ -786,6 +816,8 @@ class OmniQA:
                         similarity_top_k=self.top_k,
                         #response_mode="compact",
                         #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.1),
+                        required_keywords=self.keywords_req,
+                        exclude_keywords=self.keywords_excl,
                         )
                 price_tkn = self.mock_llm_predictor.last_token_usage
 
@@ -823,6 +855,8 @@ class OmniQA:
                         similarity_top_k=self.top_k,
                         #response_mode="compact",
                         #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.5),
+                        required_keywords=self.keywords_req,
+                        exclude_keywords=self.keywords_excl,
                         )
             else:
                 response = self.index.query(
@@ -839,6 +873,8 @@ class OmniQA:
                         # query_configs = self.query_configs,
                         # available mode : default, retrieve, embedding,
                         #                  summarize, simple, rake, recursive
+                        required_keywords=self.keywords_req,
+                        exclude_keywords=self.keywords_excl,
                         )
             pl(response)
             pl(f"\n##### Sources:\n{response.get_formatted_sources()}\n#####\n\n")
