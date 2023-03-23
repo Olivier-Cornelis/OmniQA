@@ -410,6 +410,13 @@ class OmniQA:
             raise NotImplementedError()
             # not yet implemented but llama index seems to support it
             self.index_list = []
+            summary_llm = LLMPredictor(
+                    llm=OpenAI(
+                        temperature=0,
+                        model_name="gpt-3.5-turbo",
+                        openai_api_key=self.openai_api_key,
+                        )
+                    )
             for index_path in index_paths:
                 pl(f"Loading index '{index_path}'")
                 new_index = GPTFaissIndex.load_from_disk(
@@ -425,7 +432,7 @@ class OmniQA:
                     pl(f"Index '{index_path}' found in metadata")
                     if "summary" in self.index_metadata[index_hash]:
                         pl("    Summary found in metadata:")
-                        summary = str(self.index_metadata_path[index_hash]["summary"])
+                        summary = str(self.index_metadata[index_hash]["summary"])
                         pl(summary)
                     else:
                         pl("    Summary NOT found in metadata...")
@@ -433,20 +440,36 @@ class OmniQA:
                 else:
                     compute_summary = True
                 if compute_summary:
+                    new_index.query(
+                            self.summary_prompt,
+                            response_mode="tree_summarize",
+                            llm_predictor=self.mock_llm_predictor,
+                            embed_model=self.mock_embed_model,
+                            )
+                    price_tkn = self.mock_llm_predictor.last_token_usage
+                    price_dol = f"{price_tkn / 1000 * self.model_price:.2f}"
+                    formatted_price = f"${price_dol} for '{index_path}'"
+                    pl(f"Price to summarize : '{formatted_price}'")
+                    if not (self.yes and price_dol < 3):
+                        ans = input("\n\nAre you okay? (y/n)")
+                        if ans not in ["y", "yes"]:
+                            pl("Quitting.")
+                            raise SystemExit()
                     pl("Computing summary...")
                     summary = new_index.query(
                             self.summary_prompt,
-                            mode="summarize",
+                            response_mode="tree_summarize",
+                            llm_predictor=summary_llm,
+                            embed_model=self.openai_embedder,
                             )
                     pl(str(summary))
-                    self.index_metadata[index_hash]["summary"] = str(summary)
+                    self.index_metadata[index_hash] = {"summary": str(summary)}
                     self.save_index_metadata()
                     new_index.set_text(str(summary))
 
                 # add a doc id so that the subindex will be considered a
                 # document by the top index
-                new_index.set_doc_id(
-                        index_path)
+                new_index.set_doc_id(index_path)
 
                 self.index_list.append(new_index)
                 self.query_configs.append({
