@@ -1,3 +1,4 @@
+import hashlib
 import time
 import logging
 from pathlib import Path
@@ -151,10 +152,11 @@ class OmniQA:
 
         # which prompt to use
         self.prompt_name = prompt_name
-        prompts = PromptClass()
-        assert hasattr(prompts, prompt_name), "Invalid prompt name"
-        prompt = getattr(prompts, prompt_name)
+        self.prompts = PromptClass()
+        assert hasattr(self.prompts, prompt_name), "Invalid prompt name"
+        prompt = getattr(self.prompts, prompt_name)
         self.prompt = QuestionAnswerPrompt(prompt)
+        self.summary_prompt = getattr(self.prompts, prompt_name + "_summary")
 
         # --yes to bypass confirmation
         assert isinstance(yes, bool), "Wrong type of --yes"
@@ -237,7 +239,7 @@ class OmniQA:
                     "shortname": "chatgpt",
                     "price": 0.002,
                     "refine": RefinePrompt.from_langchain_prompt(
-                        getattr(prompts, f"{prompt_name}_chat_refine")),
+                        getattr(self.prompts, f"{prompt_name}_chat_refine")),
                     "max_tokens": 4096,  # actually chatgpt can take more
                     # but this is also used to limit the completion size
                     },
@@ -245,14 +247,14 @@ class OmniQA:
                     "shortname": "davinci",
                     "price": 0.02,
                     "refine": RefinePrompt(
-                        getattr(prompts, f"{prompt_name}_default_refine")),
+                        getattr(self.prompts, f"{prompt_name}_default_refine")),
                     "max_tokens": 4096,
                     },
                 "text-curie-001": {
                     "shortname": "curie",
                     "price": 0.002,
                     "refine": RefinePrompt(
-                        getattr(prompts, f"{prompt_name}_default_refine")),
+                        getattr(self.prompts, f"{prompt_name}_default_refine")),
                     "max_tokens": 2048,
                     },
                 }
@@ -401,10 +403,12 @@ class OmniQA:
                            for x in Path(".").rglob(str(self.index_path))]
             if len(index_paths) == 1:
                 self.index_path = index_paths[0]
-                return self.load_index()  # recursive call
+                return self.load_index()  # recursive call if only one to load
+
+            self.load_index_metadata()
 
             raise NotImplementedError()
-            # not yet implemented but llama index probably supports it
+            # not yet implemented but llama index seems to support it
             self.index_list = []
             for index_path in index_paths:
                 pl(f"Loading index '{index_path}'")
@@ -412,6 +416,38 @@ class OmniQA:
                         index_path,
                         faiss_index_save_path=str(index_path) + ".faiss",
                         )
+
+                # check if the index has already been summaried from checking
+                # the metadata
+                index_hash = self.hashlib_file(index_path)
+                compute_summary = False
+                if index_hash in self.index_metadata:
+                    pl(f"Index '{index_path}' found in metadata")
+                    if "summary" in self.index_metadata[index_hash]:
+                        pl("    Summary found in metadata:")
+                        summary = str(self.index_metadata_path[index_hash]["summary"])
+                        pl(summary)
+                    else:
+                        pl("    Summary NOT found in metadata...")
+                        compute_summary = True
+                else:
+                    compute_summary = True
+                if compute_summary:
+                    pl("Computing summary...")
+                    summary = new_index.query(
+                            self.summary_prompt,
+                            mode="summarize",
+                            )
+                    pl(str(summary))
+                    self.index_metadata[index_hash]["summary"] = str(summary)
+                    self.save_index_metadata()
+                    new_index.set_text(str(summary))
+
+                # add a doc id so that the subindex will be considered a
+                # document by the top index
+                new_index.set_doc_id(
+                        index_path)
+
                 self.index_list.append(new_index)
                 self.query_configs.append({
                         "index_struct_type": "dict",
@@ -420,6 +456,42 @@ class OmniQA:
             self.index_gptlist = GPTListIndex(self.index_list)
             self.index = ComposableGraph.build_from_index(self.index_gptlist)
             self.query_mode = "recursive"
+
+            self.save_index_metadata()
+
+    def hashlib_file(self, index_path):
+        pl("Hashing file...")
+        h = hashlib.sha256()
+        for path in tqdm([index_path, index_path + ".faiss"]):
+            with open(path, "rb", buffering=0) as f:
+                chunk = f.read(h.block_size)
+                if not chunk:
+                    break
+                h.update(chunk)
+        return h.hexdigest()
+
+    def load_index_metadata(self):
+        """
+        Load the json file that contains information to construct a
+        list index over the regular indices without having to recompute the
+        summary
+        """
+        self.index_metadata_path = self.index_path.parent / "index_metadata.json"
+        pl(f"Index metadata path: '{self.index_metadata_path}'")
+        if not self.index_metadata_path.exists():
+            pl("Index metadata json file not found, creating it.")
+            self.index_metadata = dict()
+        else:
+            pl("Index metadata json file found.")
+            self.index_metadata = json.loads(self.index_metadata_path.read_text())
+
+    def save_index_metadata(self):
+        pl(f"Saving index metadata file to '{self.index_metadata_path}'")
+        with open(str(self.index_metadata_path), "w") as f:
+            json.dump(self.index_metadata, f)
+        assert self.index_metadata_path.exists(), (
+            "Failed saving the index metadata file")
+
 
     def add_docs_to_index(self, create_index):
         """

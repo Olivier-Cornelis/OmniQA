@@ -62,6 +62,7 @@ class PromptClass:
                 ]
             )
 
+    french_qa_summary = "Quel serait un résumé de ce document ?"
 
     english_qa = """We will give you some context information, a set of rules and then a question.
     """ + english_rules + """
@@ -102,3 +103,5 @@ class PromptClass:
                     )
                 ]
             )
+
+    english_qa_summary = "What is a summary of this document?"
