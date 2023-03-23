@@ -389,7 +389,7 @@ class OmniQA:
                     )
             pl(f"\nLoaded index '{self.index_path}' from file.")
 
-            # self.query_mode = "default"
+            self.query_mode = "embedding"
             # self.query_configs = [{
             #         "index_struct_type": "dict",
             #         "query_mode": "default",
@@ -814,6 +814,7 @@ class OmniQA:
                         llm_predictor=self.mock_llm_predictor,
                         embed_model=self.mock_embed_model,
                         similarity_top_k=self.top_k,
+                        mode=self.query_mode,
                         #response_mode="compact",
                         #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.1),
                         required_keywords=self.keywords_req,
@@ -868,10 +869,10 @@ class OmniQA:
                         embed_model=self.openai_embedder,
                         similarity_top_k=self.top_k,
                         #optimizer=SentenceEmbeddingOptimizer(threshold_cutoff=0.1),
+                        mode=self.query_mode,
                         #response_mode="compact",
-                        # mode=self.query_mode,
                         # query_configs = self.query_configs,
-                        # available mode : default, retrieve, embedding,
+                        # available mode? : default, retrieve, embedding,
                         #                  summarize, simple, rake, recursive
                         required_keywords=self.keywords_req,
                         exclude_keywords=self.keywords_excl,
