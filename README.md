@@ -34,6 +34,7 @@ Feed virtually any type of document to a large language model and get an index i
 ## Not urgent
 * parser: youtube (exists already on llama_hub i think)
 * parser: url (on llama_hub)
+* handle query transformations (link)[https://gpt-index.readthedocs.io/en/latest/how_to/query_transformations.html]
 * upload it to pypi
 
 ### Similar projects
