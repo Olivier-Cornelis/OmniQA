@@ -1,6 +1,7 @@
 from langchain.prompts.chat import (
-    AIMessagePromptTemplate,
     ChatPromptTemplate,
+    AIMessagePromptTemplate,
+    SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
 
@@ -44,9 +45,13 @@ class PromptClass:
 
     french_qa_chat_refine = ChatPromptTemplate.from_messages(
             [
+                SystemMessagePromptTemplate.from_template(
+                    f"""Vous êtes un assistant parfait qui extrait la réponse à une question donnée d'un contexte fourni.
+                    {french_rules}
+                    """
+                    ),
                 HumanMessagePromptTemplate.from_template(
                     """Question initiale : {query_str}
-                    """ + french_rules + """
                     Votre réponse initiale : '{existing_answer}'
                     Nous allons vous donner du contexte additionnel pour vous permettre de completer votre réponse. En aucun cas pouvez vous modifier votre réponse initiale, vous pouvez uniquement rajouter du texte à sa suite. Ne le faite que si le nouveau contexte s'y prete, sinon répondez uniquement votre réponse initiale.
                     Avant de continuer, pouvez vous confirmer que vous être prêts ?"""),
@@ -85,6 +90,11 @@ class PromptClass:
 
     english_qa_chat_refine = ChatPromptTemplate.from_messages(
             [
+                SystemMessagePromptTemplate.from_template(
+                    f"""You are a perfect assistant that extracts the answer to a given question from a provided context.
+                    {english_rules}
+                    """
+                    ),
                 HumanMessagePromptTemplate.from_template(
                     """Initial question : {query_str}
                     """ + english_rules + """
