@@ -415,6 +415,7 @@ class OmniQA:
 
             raise NotImplementedError()
             # not yet implemented but llama index seems to support it
+            # example implementation to try : https://github.com/jerryjliu/llama_index/issues/1148#issuecomment-1521205659
             self.index_list = []
             summary_llm = LLMPredictor(
                     llm=OpenAI(
