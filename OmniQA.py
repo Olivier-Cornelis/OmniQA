@@ -550,11 +550,11 @@ class OmniQA:
             price_tkn = self.mock_embed_model.last_token_usage
             total += price_tkn
             fname = Path(self.new_docs[i]).name
-            price_dol = f"{price_tkn / 1000 * 0.0004:.2f}"
+            price_dol = f"{price_tkn / 1000 * 0.0001:.2f}"
             formatted_price = f"${price_dol} for '{fname}'"
             pl(formatted_price)
 
-        total_dol = total / 1000 * 0.0004
+        total_dol = total / 1000 * 0.0001
         formatted_price = (
                 f"\n\n'Total price: Token Used: {total} "
                 f"Cost: ${total_dol:.2f}")
