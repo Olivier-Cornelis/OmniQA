@@ -242,7 +242,7 @@ class OmniQA:
         self.model_info = {
                 "gpt-3.5-turbo": {
                     "shortname": "chatgpt",
-                    "price": 0.002,
+                    "price": {"input": 0.0015, "output": 0.002},
                     "refine": RefinePrompt.from_langchain_prompt(
                         getattr(self.prompts, f"{prompt_name}_chat_refine")),
                     "max_tokens": 4096,  # actually chatgpt can take more
@@ -456,7 +456,10 @@ class OmniQA:
                             verbose=self.verbose,
                             )
                     price_tkn = self.mock_llm_predictor.last_token_usage
-                    price_dol = f"{price_tkn / 1000 * self.model_price:.2f}"
+                    if isinstance(self.model_price, (int, float)):
+                        price_dol = f"{price_tkn / 1000 * self.model_price:.2f}"
+                    else:
+                        raise NotImplementedError("Not implemented yet the difference between pricing the input and output tokens")
                     formatted_price = f"${price_dol} for '{index_path}'"
                     pl(f"Price to summarize : '{formatted_price}'")
                     if not (self.yes and price_dol < 3):
@@ -834,7 +837,10 @@ class OmniQA:
                         )
                 price_tkn = self.mock_llm_predictor.last_token_usage
 
-            total_price = price_tkn / 1000 * self.model_price
+            if isinstance(self.model_price, (int, float)):
+                total_price = price_tkn / 1000 * self.model_price
+            else:
+                raise NotImplementedError("Not implemented yet the difference between pricing the input and output tokens")
             pl(f"\nTokens Used: {price_tkn} Cost: "
                f"${total_price:.4f}")
 
