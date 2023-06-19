@@ -664,18 +664,12 @@ class OmniQA:
                     for x in self.prev_questions
                     ], match_middle=True, ignore_case=True)
         try:
-            try:
-                if self.multiline:
-                    pl("Multiline mode activated. Use ctrl+D to send.")
-                ans = prompt(q,
-                             completer=autocomplete,
-                             vi_mode=True,
-                             multiline=self.multiline)
-            except (KeyboardInterrupt, EOFError):
-                if self.multiline:
-                    pass
-                else:
-                    raise
+            if self.multiline:
+                pl("Multiline mode activated. Use esc+enter to send.")
+            ans = prompt(q,
+                         completer=autocomplete,
+                         vi_mode=True,
+                         multiline=self.multiline)
 
             # quit if needed
             if ans.strip() in ["quit", "Q", "q"]:
