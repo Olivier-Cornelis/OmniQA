@@ -1,5 +1,7 @@
 # OmniQA
 
+**UPDATE: this project was archived because I now use [DocToolsLLM](https://github.com/thiswillbeyourgithub/DocToolsLLM)**
+
 Feed virtually any type of document to a large language model and get an index in return. You can then ask question to your index and the large language model will answer with high accuracy in a few instants.
 
 * Models supported : ChatGPT, Davinci, Curie (pretty easy to add more)
